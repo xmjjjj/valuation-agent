@@ -1,0 +1,37 @@
+Windows 本地 MySQL 安装（不用 Docker）
+====================================
+
+1) 下载 MySQL Installer（社区版）
+   https://dev.mysql.com/downloads/installer/
+   选择 mysql-installer-community（约 2MB 在线安装器）
+
+2) 安装时选择：
+   - MySQL Server 8.0（或 8.4）
+   - MySQL Shell（可选）
+   设置 root 密码并记住。
+
+3) 初始化本项目数据库（在项目根目录，二选一）：
+
+   方式 A（推荐，只需 Python）：
+   pip install pymysql
+   python scripts\setup_db.py
+   按提示输入安装 MySQL 时设置的 root 密码。
+
+   方式 B（已配置 mysql 命令行）：
+   .\scripts\init_database.ps1
+
+4) 确认 .env 与默认一致：
+   MYSQL_HOST=127.0.0.1
+   MYSQL_PORT=3306
+   MYSQL_USER=patent
+   MYSQL_PASSWORD=patent_dev
+   MYSQL_DATABASE=patent_valuation
+
+5) 测试：
+   python -m venv .venv
+   .\.venv\Scripts\activate
+   pip install -r requirements.txt
+   python scripts\check_db.py
+   python main.py CN202310001234.5
+
+若 3306 端口被占用，可在安装器里改端口，并同步修改 .env 的 MYSQL_PORT。
