@@ -25,7 +25,17 @@
   - 连不上数据库：打开 services.msc，启动 MySQL80 服务
   - 没有 patent 用户：重新运行 setup_db.py
 
-四、主要代码目录
+四、启用 DeepSeek（可选）
+  1. 打开 https://platform.deepseek.com/api_keys 创建 API Key
+  2. 复制 .env.example 为 .env，填写：
+       OPENAI_API_KEY=sk-你的密钥
+       OPENAI_BASE_URL=https://api.deepseek.com
+       OPENAI_MODEL=deepseek-chat
+  3. python scripts\test_deepseek.py
+  4. python scripts\run_innovation_agent.py CN202310001234.5
+     输出 method 为 llm 即表示已走大模型
+
+五、主要代码目录
   src/agents/innovation.py  创新程度 Agent
   src/agents/scene.py       应用场景 Agent
   db/init/                  建表与样例数据 SQL
