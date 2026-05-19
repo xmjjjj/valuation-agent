@@ -14,12 +14,15 @@ from src.models import InnovationResult, PatentData, SceneResult
 
 # 规则：关键词 / IPC 前缀 -> 场景标签
 SCENE_RULES: list[tuple[list[str], str]] = [
-    (["大语言模型", "LLM", "语言模型", "专利", "知识产权", "G06N"], "人工智能/知识产权金融科技"),
-    (["半导体", "封装", "芯片", "H01L"], "半导体制造与封装"),
-    (["高分子", "复合材料", "聚合物", "C08F"], "新材料/化工"),
-    (["医疗", "诊断", "生物", "A61"], "医疗健康"),
-    (["电池", "储能", "新能源", "H01M"], "新能源与储能"),
-    (["汽车", "车联网", "B60"], "智能网联汽车"),
+    # 化学化工领域（大创主攻方向）
+    (["催化剂", "催化", "C07C", "C07D", "C07B"], "精细化工催化"),
+    (["高分子", "聚合物", "复合材料", "C08F", "C08G", "C08L"], "高分子新材料"),
+    (["锂电池", "电解液", "正极", "负极", "H01M"], "新能源电池材料"),
+    (["涂料", "胶粘剂", "树脂", "C09D", "C09J"], "涂料胶粘剂"),
+    (["制药", "药物", "活性组分", "A61K", "C07D"], "医药化工"),
+    (["绿色化学", "可降解", "生物基", "环保"], "绿色化学与可持续材料"),
+    (["半导体", "封装", "芯片", "H01L"], "电子化学品/半导体材料"),
+    (["大语言模型", "LLM", "语言模型", "专利", "G06N"], "知识产权数字化/AI辅助研发"),
 ]
 
 # 行业成熟度：增长率低于阈值视为成熟（与方案「行业成熟/新兴」对应）
@@ -88,9 +91,13 @@ def _match_labels_rule(patent: PatentData) -> list[str]:
             if label not in labels:
                 labels.append(label)
     ipc = (patent.ipc_prefix or patent.ipc_code or "").upper()
-    if ipc.startswith("G06") and "人工智能/知识产权金融科技" not in labels:
-        labels.append("人工智能/知识产权金融科技")
-    return labels or ["通用工业应用"]
+    if ipc.startswith("C07") and not any("催化" in x for x in labels):
+        labels.append("精细化工催化")
+    if ipc.startswith("C08") and not any("高分子" in x for x in labels):
+        labels.append("高分子新材料")
+    if ipc.startswith("G06") and not any("AI" in x or "知识产权" in x for x in labels):
+        labels.append("知识产权数字化/AI辅助研发")
+    return labels or ["通用化学工业应用"]
 
 
 def _build_llm_messages(

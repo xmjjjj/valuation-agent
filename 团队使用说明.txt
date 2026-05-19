@@ -35,8 +35,33 @@
   4. python scripts\run_innovation_agent.py CN202310001234.5
      输出 method 为 llm 即表示已走大模型
 
-五、主要代码目录
-  src/agents/innovation.py  创新程度 Agent
-  src/agents/scene.py       应用场景 Agent
-  db/init/                  建表与样例数据 SQL
-  scripts/                  安装与单独测试脚本
+五、Docker 一键部署（推荐答辩演示）
+  1. 安装 Docker Desktop
+  2. 项目根目录执行:
+       docker compose up -d --build
+  3. 等待 MySQL 健康后访问:
+       http://localhost:8000/health
+       http://localhost:8000/valuate/CN202320045678.9
+  4. 完整流水线（命令行）:
+       docker compose exec app python main.py CN202320045678.9
+  报告输出在 ./reports/
+
+七、从本地文件直接估值（无需数据库里有该专利）
+  python run_from_file.py samples/patent_example.txt
+  或:
+       python main.py -f samples/patent_example.txt
+  文件格式见 samples/patent_example.txt（标题/摘要/权利要求等字段）
+  可选同名 .meta.json 补充引用次数、行业参数（见 patent_example.meta.json）
+  PDF: pip install pypdf 后 python run_from_file.py 你的文件.pdf
+
+六、主要代码目录
+  src/agents/innovation.py   创新程度 Agent
+  src/agents/scene.py        应用场景 Agent
+  src/agents/market.py       市场环境 Agent
+  src/agents/value.py        价值整合 Agent
+  src/agents/valuation.py    估值 Agent
+  src/agents/report.py       报告生成 Agent
+  src/agents/pipeline.py     多 Agent 流水线
+  api.py                     FastAPI 服务入口
+  db/init/                   建表与样例数据 SQL
+  scripts/                   安装与单独测试脚本

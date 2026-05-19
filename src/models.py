@@ -52,16 +52,69 @@ class SceneResult:
 
 
 @dataclass
+class MarketScoreBreakdown:
+    """市场潜力分分项。"""
+
+    size_score: float = 0.0
+    growth_score: float = 0.0
+    competition_score: float = 0.0
+    policy_score: float = 0.0
+
+
+@dataclass
 class MarketResult:
     market_score: float
     risk_index: float
+    breakdown: MarketScoreBreakdown = field(default_factory=MarketScoreBreakdown)
+    market_summary: str = ""
+    risk_factors: list[str] = field(default_factory=list)
+    method: str = "rule"  # llm | rule
+
+
+@dataclass
+class ValueIntegrationResult:
+    """价值整合 Agent 输出。"""
+
+    final_score_raw: float
+    final_score: float
+    innovation_weighted: float
+    scene_weighted: float
+    market_weighted: float
+    risk_adjustment_factor: float
+
+
+@dataclass
+class ValuationResult:
+    """估值 Agent 输出。"""
+
+    valuation_wan: float
+    pledge_amount_wan: float
+    max_market_value_wan: float
+    pledge_ratio: float = 0.7
 
 
 @dataclass
 class ValueResult:
-    final_score: float
-    valuation_wan: float
-    pledge_amount_wan: float
+    """流水线汇总（整合 + 估值）。"""
+
+    integration: ValueIntegrationResult
+    valuation: ValuationResult
+
+    @property
+    def final_score(self) -> float:
+        return self.integration.final_score
+
+    @property
+    def final_score_raw(self) -> float:
+        return self.integration.final_score_raw
+
+    @property
+    def valuation_wan(self) -> float:
+        return self.valuation.valuation_wan
+
+    @property
+    def pledge_amount_wan(self) -> float:
+        return self.valuation.pledge_amount_wan
 
 
 @dataclass
@@ -74,4 +127,5 @@ class PipelineReport:
     value: ValueResult
     run_id: str
     report_text: str
+    report_text_polished: str = ""
     report_json: dict[str, Any] = field(default_factory=dict)

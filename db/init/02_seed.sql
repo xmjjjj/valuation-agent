@@ -3,18 +3,24 @@
 INSERT IGNORE INTO ipc_frontier (ipc_code, is_frontier, note) VALUES
 ('G06N', 1, '人工智能前沿'),
 ('H01L', 1, '半导体'),
-('C08F', 0, '常规高分子');
+('C07C', 1, '有机化学前沿催化'),
+('C08F', 1, '功能高分子前沿'),
+('C08G', 0, '常规缩聚物');
 
 INSERT IGNORE INTO industry_data (ipc_prefix, market_size, growth_rate, competition_level, policy_support, max_market_value) VALUES
 ('G06N', 1200.00, 18.50, '中', 85, 50000.00),
 ('H01L', 3500.00, 12.00, '高', 90, 120000.00),
-('C08F', 800.00, 6.50, '低', 60, 20000.00);
+('C07C', 2200.00, 11.00, '中', 88, 45000.00),
+('C08F', 800.00, 6.50, '低', 75, 20000.00),
+('C08G', 650.00, 7.20, '中', 70, 18000.00);
 
 INSERT IGNORE INTO ipc_citation_stats (ipc_prefix, grant_year, avg_citation, sample_size) VALUES
 ('G06N', 2022, 8.50, 120),
 ('G06N', 2023, 6.20, 150),
 ('H01L', 2022, 12.00, 200),
-('C08F', 2022, 3.50, 80);
+('C07C', 2023, 5.80, 95),
+('C08F', 2022, 3.50, 80),
+('C08F', 2023, 4.10, 90);
 
 INSERT IGNORE INTO patents (
     patent_id, title, abstract, claims, applicant, inventor,
@@ -32,6 +38,20 @@ INSERT IGNORE INTO patents (
     2023,
     '有效',
     15,
+    1
+),
+(
+    'CN202320045678.9',
+    '一种手性催化剂及其在不对称合成中的应用',
+    '本发明涉及一种新型手性配体催化剂，可用于芳香酮的不对称氢化，提高对映体过量值并降低贵金属用量。',
+    '1.一种手性催化剂，其特征在于，包含配体L和金属中心M。',
+    '某某精细化工研究院',
+    '陈八;周九',
+    '202320045678.9',
+    'C07C209/00',
+    2023,
+    '有效',
+    9,
     1
 ),
 (

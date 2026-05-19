@@ -148,6 +148,16 @@ def _extract_innovations_rule(patent: PatentData) -> list[str]:
         "提高",
         "封装",
         "复合材料",
+        "催化剂",
+        "催化",
+        "单体",
+        "聚合",
+        "官能团",
+        "收率",
+        "选择性",
+        "电解液",
+        "正极材料",
+        "绿色合成",
     ]
     points: list[str] = []
     for sentence in re.split(r"[。；;.\n]", patent.abstract or ""):

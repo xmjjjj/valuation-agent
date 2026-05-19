@@ -23,6 +23,26 @@ def _set_error(msg: str) -> None:
     _last_error = msg
 
 
+def api_key_is_usable() -> bool:
+    """HTTP 头仅支持 latin-1，占位符或含中文的 Key 会导致 UnicodeEncodeError。"""
+    key = (OPENAI_API_KEY or "").strip()
+    if not key:
+        return False
+    if not key.isascii():
+        _set_error(
+            "OPENAI_API_KEY 含有中文或非法字符。请在 .env 中填写真实的 API Key，"
+            "不要使用 .env.example 里的「sk-你的DeepSeek密钥」占位文字。"
+        )
+        return False
+    if "你的" in key or key.endswith("密钥") or len(key) < 20:
+        _set_error(
+            "OPENAI_API_KEY 仍是示例占位符。请到 https://platform.deepseek.com/api_keys "
+            "申请真实 Key 并写入 .env。"
+        )
+        return False
+    return True
+
+
 def _extract_json_block(text: str) -> dict[str, Any]:
     text = text.strip()
     fenced = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
@@ -44,6 +64,9 @@ def _request_completion(
     temperature: float,
     json_mode: bool,
 ) -> str | None:
+    if not api_key_is_usable():
+        return None
+
     payload: dict[str, Any] = {
         "model": OPENAI_MODEL,
         "messages": messages,
@@ -79,9 +102,25 @@ def _request_completion(
     except (json.JSONDecodeError, TimeoutError) as exc:
         _set_error(f"响应解析/超时: {exc}")
         return None
+    except UnicodeEncodeError as exc:
+        _set_error(
+            f"请求头编码失败（多为 API Key 含中文）: {exc}. "
+            "请检查 .env 中 OPENAI_API_KEY 是否为真实英文 Key。"
+        )
+        return None
 
     _set_error("")
     return body.get("choices", [{}])[0].get("message", {}).get("content", "") or None
+
+
+def chat_completion_text(
+    messages: list[dict[str, str]],
+    *,
+    temperature: float = 0.3,
+) -> str | None:
+    if not api_key_is_usable():
+        return None
+    return _request_completion(messages, temperature=temperature, json_mode=False)
 
 
 def chat_completion_json(
@@ -89,8 +128,7 @@ def chat_completion_json(
     *,
     temperature: float = 0.2,
 ) -> dict[str, Any] | None:
-    if not OPENAI_API_KEY:
-        _set_error("未配置 OPENAI_API_KEY")
+    if not api_key_is_usable():
         return None
 
     content = _request_completion(messages, temperature=temperature, json_mode=True)

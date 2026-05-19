@@ -20,5 +20,26 @@ services:
       timeout: 5s
       retries: 12
 
+  app:
+    build: .
+    container_name: patent-valuation-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: patent
+      MYSQL_PASSWORD: patent_dev
+      MYSQL_DATABASE: patent_valuation
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.deepseek.com}
+      OPENAI_MODEL: ${OPENAI_MODEL:-deepseek-chat}
+    volumes:
+      - ./reports:/app/reports
+    depends_on:
+      mysql:
+        condition: service_healthy
+
 volumes:
   mysql_data:

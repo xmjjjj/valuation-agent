@@ -1,3 +1,11 @@
+"""
+多 Agent 估值流水线
+
+专利数据 → 创新程度 → 应用场景 → 市场环境 → 价值整合 → 估值 → 报告
+"""
+
+from __future__ import annotations
+
 import json
 import uuid
 
@@ -7,10 +15,27 @@ from src.agents.innovation import innovation_agent
 from src.agents.market import market_agent
 from src.agents.report import report_agent
 from src.agents.scene import scene_agent
-from src.agents.value import value_agent
+from src.agents.valuation import valuation_agent
+from src.agents.value import value_integration_agent
 from src.db import get_session
-from src.models import PipelineReport
+from src.models import PatentData, PipelineReport, ValueResult
 from src.repository import get_patent_data
+
+
+def run_pipeline_on_patent(patent: PatentData, *, save: bool = False) -> PipelineReport:
+    """对已构造的 PatentData 运行六 Agent 流水线（不查 patents 表）。"""
+    innovation = innovation_agent(patent)
+    scene = scene_agent(patent, innovation)
+    market = market_agent(patent, scene)
+    integration = value_integration_agent(innovation, scene, market)
+    valuation = valuation_agent(integration, patent.industry)
+    value = ValueResult(integration=integration, valuation=valuation)
+
+    run_id = str(uuid.uuid4())
+    report = report_agent(patent, innovation, scene, market, value, run_id)
+    if save:
+        _save_run(report)
+    return report
 
 
 def _save_run(report: PipelineReport) -> None:
@@ -53,18 +78,22 @@ def _save_run(report: PipelineReport) -> None:
         session.commit()
 
 
-def run_pipeline(patent_id: str) -> PipelineReport:
-    patent_data = get_patent_data(patent_id)
-    innovation = innovation_agent(patent_data)
-    scene = scene_agent(patent_data, innovation)
-    market = market_agent(patent_data, scene)
+def run_pipeline(patent_id: str, *, save: bool = True) -> PipelineReport:
+    return run_pipeline_on_patent(get_patent_data(patent_id), save=save)
 
-    max_market_value = 10000.0
-    if patent_data.industry:
-        max_market_value = float(patent_data.industry.get("max_market_value", 10000))
 
-    value = value_agent(innovation, scene, market, max_market_value)
-    run_id = str(uuid.uuid4())
-    report = report_agent(patent_data, innovation, scene, market, value, run_id)
-    _save_run(report)
-    return report
+def run_pipeline_from_file(
+    file_path: str,
+    *,
+    save: bool = False,
+    use_llm_parse: bool = True,
+    enrich_db: bool = True,
+) -> PipelineReport:
+    """从本地 txt/json/pdf 加载专利并估值（默认不写库，避免外键约束）。"""
+    from src.ingest.enrich import enrich_patent_from_db
+    from src.ingest.file_loader import load_patent_from_file
+
+    patent = load_patent_from_file(file_path, use_llm=use_llm_parse)
+    if enrich_db:
+        patent = enrich_patent_from_db(patent)
+    return run_pipeline_on_patent(patent, save=save)
